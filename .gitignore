@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Next.js build output
+.next/
+out/
+
+# Production build artifacts
+build/
+dist/
+
+# Turborepo & Cache
+.turbo/
+*.tsbuildinfo
+
+# Testing & Coverage
+coverage/
+*.lcov
+
+# Debug & Error logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+ui-debug.log*
+
+# OS metadata
+.DS_Store
+Thumbs.db
+*.pem
+
+# IDE & Editor files
+.vscode/
+.idea/
+.cursor/
+.cursor
+
+# Local Test Documents
+backend/test_docs/*.pdf
+backend/test_docs/*.json
+!backend/test_docs/.gitkeep

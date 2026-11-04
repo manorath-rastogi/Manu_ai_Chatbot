@@ -1,0 +1,29 @@
+[
+  {
+    "pageContent": "Manu AI Chatbot is a modern, state-of-the-art conversational AI platform designed for intelligent document ingestion, semantic search, and retrieval-augmented generation (RAG). Built using LangChain, LangGraph, Next.js, and Supabase Vector Store, it allows users to upload documents and query them with contextual awareness and accurate citations.",
+    "metadata": {
+      "source": "manu-ai-overview.pdf",
+      "loc": {
+        "pageNumber": 1
+      }
+    }
+  },
+  {
+    "pageContent": "Core Capabilities of Manu AI Chatbot:\n- Document Ingestion Pipeline: Automatically extracts, chunks, and embeds PDF documents into vector embeddings.\n- Semantic Retrieval: Performs high-precision similarity search against vector embeddings using pgvector.\n- Intelligent Routing: Evaluates user queries to either retrieve document context or answer general queries directly.\n- Real-Time Streaming: Uses Server-Sent Events (SSE) to stream partial tokens and UI updates to the user instantly.\n- Enterprise Grade Architecture: Modular monorepo with Turborepo, TypeScript, and modern React components.",
+    "metadata": {
+      "source": "manu-ai-overview.pdf",
+      "loc": {
+        "pageNumber": 2
+      }
+    }
+  },
+  {
+    "pageContent": "System Configuration & Integration:\nManu AI Chatbot supports various LLM providers including OpenAI (gpt-4o, gpt-4o-mini), Anthropic Claude, Google Gemini, Ollama, and Groq. The vector store can be configured with Supabase pgvector or customized for other providers. Deployment is streamlined for Vercel and LangGraph Cloud.",
+    "metadata": {
+      "source": "manu-ai-overview.pdf",
+      "loc": {
+        "pageNumber": 3
+      }
+    }
+  }
+]
