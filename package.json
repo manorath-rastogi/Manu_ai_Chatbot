@@ -20,5 +20,8 @@
   },
   "devDependencies": {
     "turbo": "latest"
+  },
+  "resolutions": {
+    "tailwindcss": "^3.4.17"
   }
 }
