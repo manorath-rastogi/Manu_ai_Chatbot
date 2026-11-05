@@ -174,7 +174,14 @@ export default function Home() {
             continue;
           }
 
-          const { event, data } = sseEvent;
+          let event = sseEvent.event;
+          let data = sseEvent.data;
+
+          // Unwrap if nested in LangGraph SDK message event
+          if (data && typeof data === 'object' && 'event' in data) {
+            event = data.event;
+            data = data.data;
+          }
 
           if (event === 'messages/partial') {
             if (Array.isArray(data)) {
@@ -182,10 +189,7 @@ export default function Home() {
               if (lastObj?.type === 'ai') {
                 const partialContent = lastObj.content ?? '';
 
-                if (
-                  typeof partialContent === 'string' &&
-                  !partialContent.startsWith('{')
-                ) {
+                if (typeof partialContent === 'string') {
                   setMessages((prev) => {
                     const newArr = [...prev];
                     if (

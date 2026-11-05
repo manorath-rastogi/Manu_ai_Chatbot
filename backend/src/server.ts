@@ -65,17 +65,15 @@ const server = http.createServer(async (req, res) => {
           messages: [],
         });
 
-        // 1. Send retrieved documents event
+        // 1. Send retrieved documents event (proper SSE event format)
         if (result.documents && result.documents.length > 0) {
-          const updatesEvent = {
-            event: 'updates',
-            data: {
+          res.write(
+            `event: updates\ndata: ${JSON.stringify({
               retrieveDocuments: {
                 documents: result.documents,
               },
-            },
-          };
-          res.write(`data: ${JSON.stringify(updatesEvent)}\n\n`);
+            })}\n\n`,
+          );
         }
 
         // 2. Stream answer text in chunks to provide streaming effect
@@ -83,38 +81,42 @@ const server = http.createServer(async (req, res) => {
           result.messages[result.messages.length - 1]?.content ||
           'No answer generated.';
 
-        const chunkSize = 15;
+        const chunkSize = 35;
         for (let i = 0; i < fullAnswer.length; i += chunkSize) {
           const partial = fullAnswer.slice(0, i + chunkSize);
-          const partialEvent = {
-            event: 'messages/partial',
-            data: [
+          res.write(
+            `event: messages/partial\ndata: ${JSON.stringify([
               {
                 type: 'ai',
                 content: partial,
               },
-            ],
-          };
-          res.write(`data: ${JSON.stringify(partialEvent)}\n\n`);
-          // Small delay for smooth human-like streaming
-          await new Promise((r) => setTimeout(r, 20));
+            ])}\n\n`,
+          );
+          await new Promise((r) => setTimeout(r, 10));
         }
+
+        // Ensure complete text is delivered in the final frame
+        res.write(
+          `event: messages/partial\ndata: ${JSON.stringify([
+            {
+              type: 'ai',
+              content: fullAnswer,
+            },
+          ])}\n\n`,
+        );
 
         res.end();
       } catch (err: any) {
         console.error('Error in stream run:', err);
         res.write(
-          `data: ${JSON.stringify({
-            event: 'messages/partial',
-            data: [
-              {
-                type: 'ai',
-                content:
-                  'Sorry, an error occurred while generating the answer: ' +
-                  err.message,
-              },
-            ],
-          })}\n\n`,
+          `event: messages/partial\ndata: ${JSON.stringify([
+            {
+              type: 'ai',
+              content:
+                'Sorry, an error occurred while generating the answer: ' +
+                err.message,
+            },
+          ])}\n\n`,
         );
         res.end();
       }
