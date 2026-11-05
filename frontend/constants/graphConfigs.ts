@@ -4,9 +4,9 @@ type StreamConfigurables = AgentConfiguration;
 type IndexConfigurables = IndexConfiguration;
 
 export const retrievalAssistantStreamConfig: StreamConfigurables = {
-  queryModel: 'openai/gpt-4o-mini',
-  retrieverProvider: 'supabase',
-  k: 5,
+  queryModel: 'groq/qwen/qwen3.8-27b',
+  retrieverProvider: 'local',
+  k: 4,
 };
 
 /**
@@ -14,5 +14,5 @@ export const retrievalAssistantStreamConfig: StreamConfigurables = {
  */
 export const indexConfig: IndexConfigurables = {
   useSampleDocs: false,
-  retrieverProvider: 'supabase',
+  retrieverProvider: 'local',
 };

@@ -3,8 +3,7 @@ import { AgentStateAnnotation } from './state.js';
 import { makeRetriever } from '../shared/retrieval.js';
 import { formatDocs } from './utils.js';
 import { HumanMessage } from '@langchain/core/messages';
-import { z } from 'zod';
-import { RESPONSE_SYSTEM_PROMPT, ROUTER_SYSTEM_PROMPT } from './prompts.js';
+import { RESPONSE_SYSTEM_PROMPT } from './prompts.js';
 import { RunnableConfig } from '@langchain/core/runnables';
 import {
   AgentConfigurationAnnotation,
@@ -14,32 +13,29 @@ import { loadChatModel } from '../shared/utils.js';
 
 async function checkQueryType(
   state: typeof AgentStateAnnotation.State,
-  config: RunnableConfig,
 ): Promise<{
   route: 'retrieve' | 'direct';
 }> {
-  //schema for routing
-  const schema = z.object({
-    route: z.enum(['retrieve', 'direct']),
-    directAnswer: z.string().optional(),
-  });
+  const query = (state.query || '').trim().toLowerCase();
+  const greetings = [
+    'hi',
+    'hello',
+    'hey',
+    'good morning',
+    'good afternoon',
+    'good evening',
+    'who are you',
+    'what can you do',
+    'help',
+    'thanks',
+    'thank you',
+  ];
 
-  const configuration = ensureAgentConfiguration(config);
-  const model = await loadChatModel(configuration.queryModel);
+  if (greetings.includes(query) || query.length < 3) {
+    return { route: 'direct' };
+  }
 
-  const routingPrompt = ROUTER_SYSTEM_PROMPT;
-
-  const formattedPrompt = await routingPrompt.invoke({
-    query: state.query,
-  });
-
-  const response = await model
-    .withStructuredOutput(schema)
-    .invoke(formattedPrompt.toString());
-
-  const route = response.route;
-
-  return { route };
+  return { route: 'retrieve' };
 }
 
 async function answerQueryDirectly(
@@ -96,16 +92,11 @@ async function generateResponse(
   });
 
   const userHumanMessage = new HumanMessage(state.query);
-
-  // Create a human message with the formatted prompt that includes context
   const formattedPromptMessage = new HumanMessage(formattedPrompt.toString());
 
   const messageHistory = [...state.messages, formattedPromptMessage];
-
-  // Let MessagesAnnotation handle the message history
   const response = await model.invoke(messageHistory);
 
-  // Return both the current query and the AI response to be handled by MessagesAnnotation's reducer
   return { messages: [userHumanMessage, response] };
 }
 

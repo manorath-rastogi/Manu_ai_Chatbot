@@ -34,6 +34,8 @@ export function ensureAgentConfiguration(
   const baseConfig = ensureBaseConfiguration(config);
   return {
     ...baseConfig,
-    queryModel: configurable.queryModel || 'openai/gpt-4o',
+    queryModel:
+      configurable.queryModel ||
+      (process.env.GROQ_API_KEY ? 'groq/qwen/qwen3.8-27b' : 'openai/gpt-4o'),
   };
 }

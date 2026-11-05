@@ -1,3 +1,4 @@
+import { BaseRetriever } from '@langchain/core/retrievers';
 import { VectorStoreRetriever } from '@langchain/core/vectorstores';
 import { OpenAIEmbeddings } from '@langchain/openai';
 import { SupabaseVectorStore } from '@langchain/community/vectorstores/supabase';
@@ -7,6 +8,7 @@ import {
   BaseConfigurationAnnotation,
   ensureBaseConfiguration,
 } from './configuration.js';
+import { LocalDocumentRetriever } from './local_retriever.js';
 
 export async function makeSupabaseRetriever(
   configuration: typeof BaseConfigurationAnnotation.State,
@@ -36,14 +38,16 @@ export async function makeSupabaseRetriever(
 
 export async function makeRetriever(
   config: RunnableConfig,
-): Promise<VectorStoreRetriever> {
+): Promise<BaseRetriever> {
   const configuration = ensureBaseConfiguration(config);
   switch (configuration.retrieverProvider) {
     case 'supabase':
       return makeSupabaseRetriever(configuration);
+    case 'local':
     default:
-      throw new Error(
-        `Unsupported retriever provider: ${configuration.retrieverProvider}`,
-      );
+      return new LocalDocumentRetriever({
+        k: configuration.k,
+        filterKwargs: configuration.filterKwargs,
+      });
   }
 }

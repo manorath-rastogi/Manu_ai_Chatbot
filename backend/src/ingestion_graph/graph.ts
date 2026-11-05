@@ -38,7 +38,9 @@ async function ingestDocs(
   }
 
   const retriever = await makeRetriever(config);
-  await retriever.addDocuments(docs);
+  if ('addDocuments' in retriever && typeof (retriever as any).addDocuments === 'function') {
+    await (retriever as any).addDocuments(docs);
+  }
 
   return { docs: 'delete' };
 }

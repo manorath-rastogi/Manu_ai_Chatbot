@@ -15,6 +15,8 @@ import {
   FileText,
   ShieldCheck,
   Zap,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { ExamplePrompts } from '@/components/example-prompts';
 import { ChatMessage } from '@/components/chat-message';
@@ -38,32 +40,38 @@ export default function Home() {
   const [files, setFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [threadId, setThreadId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastRetrievedDocsRef = useRef<PDFDocument[]>([]);
 
-  const initThread = async () => {
+  const initThread = async (showToastOnError = false) => {
+    setIsConnecting(true);
     try {
       const thread = await client.createThread();
       setThreadId(thread.thread_id);
       return thread.thread_id;
     } catch (error) {
-      console.error('Error creating thread:', error);
-      toast({
-        title: 'Connection Notice',
-        description:
-          'Could not connect to LangGraph backend. Ensure the backend server is running on http://localhost:2024.',
-        variant: 'destructive',
-      });
+      console.warn('Backend server not reachable on http://localhost:2024:', error);
+      if (showToastOnError) {
+        toast({
+          title: 'Backend Server Offline',
+          description:
+            'Could not connect to LangGraph server at http://localhost:2024. Please ensure the backend is started.',
+          variant: 'destructive',
+        });
+      }
       return null;
+    } finally {
+      setIsConnecting(false);
     }
   };
 
   useEffect(() => {
     if (!threadId) {
-      initThread();
+      initThread(false);
     }
   }, []);
 
@@ -80,7 +88,7 @@ export default function Home() {
     setInput('');
     setIsLoading(false);
     lastRetrievedDocsRef.current = [];
-    const newThreadId = await initThread();
+    const newThreadId = await initThread(true);
     if (newThreadId) {
       toast({
         title: 'New Session Started',
@@ -91,7 +99,22 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !threadId || isLoading) return;
+    if (!input.trim() || isLoading) return;
+
+    let activeThreadId = threadId;
+    if (!activeThreadId) {
+      activeThreadId = await initThread(false);
+    }
+
+    if (!activeThreadId) {
+      toast({
+        title: 'Backend Server Offline',
+        description:
+          'Cannot send message: LangGraph backend is not running on http://localhost:2024. Please start it using "cd backend && yarn langgraph:dev".',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -118,7 +141,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           message: userMessage,
-          threadId,
+          threadId: activeThreadId,
         }),
         signal: abortController.signal,
       });
@@ -264,7 +287,7 @@ export default function Home() {
       toast({
         title: 'Upload failed',
         description:
-          'Failed to upload files. Please try again.\n' +
+          'Failed to upload files. Please ensure the backend server and Supabase credentials are configured.\n' +
           (error instanceof Error ? error.message : 'Unknown error'),
         variant: 'destructive',
       });
@@ -307,14 +330,31 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full">
+            <button
+              onClick={() => initThread(true)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 hover:bg-muted px-2.5 py-1 rounded-full transition-colors cursor-pointer"
+              title={threadId ? 'Backend Connected' : 'Click to reconnect'}
+            >
               <span
                 className={`h-2 w-2 rounded-full ${
-                  threadId ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                  threadId
+                    ? 'bg-emerald-500 animate-pulse'
+                    : isConnecting
+                    ? 'bg-amber-500 animate-spin'
+                    : 'bg-rose-500'
                 }`}
               />
-              <span>{threadId ? 'Agent Ready' : 'Connecting...'}</span>
-            </div>
+              <span>
+                {threadId
+                  ? 'Agent Ready'
+                  : isConnecting
+                  ? 'Connecting...'
+                  : 'Backend Offline'}
+              </span>
+              {!threadId && !isConnecting && (
+                <RefreshCw className="h-3 w-3 ml-0.5 text-muted-foreground" />
+              )}
+            </button>
 
             {messages.length > 0 && (
               <Button
@@ -330,6 +370,30 @@ export default function Home() {
           </div>
         </div>
       </header>
+
+      {/* Backend Offline Notice Banner */}
+      {!threadId && (
+        <div className="w-full bg-amber-500/10 border-b border-amber-500/20 py-2 px-4">
+          <div className="max-w-5xl mx-auto flex items-center justify-between text-xs text-amber-900 dark:text-amber-200">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <span>
+                <strong>Backend Server is Offline:</strong> Run{' '}
+                <code className="bg-amber-500/20 px-1 py-0.5 rounded font-mono">
+                  cd backend && yarn langgraph:dev
+                </code>{' '}
+                to connect the AI agent.
+              </span>
+            </div>
+            <button
+              onClick={() => initThread(true)}
+              className="underline font-semibold hover:text-amber-600 ml-2 shrink-0 cursor-pointer"
+            >
+              Retry Connection
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Chat Content */}
       <main className="flex-1 flex flex-col items-center p-4 md:p-8 max-w-5xl mx-auto w-full pb-36">
@@ -423,16 +487,14 @@ export default function Home() {
                     : 'Ask Manu AI anything or explore your documents...'
                 }
                 className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-10 bg-transparent text-sm"
-                disabled={isUploading || isLoading || !threadId}
+                disabled={isUploading || isLoading}
               />
 
               <Button
                 type="submit"
                 size="icon"
                 className="rounded-xl h-10 w-10 shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm disabled:opacity-40"
-                disabled={
-                  !input.trim() || isUploading || isLoading || !threadId
-                }
+                disabled={!input.trim() || isUploading || isLoading}
                 title="Send Message"
               >
                 {isLoading ? (
