@@ -2,7 +2,7 @@ import { StateGraph, START, END } from '@langchain/langgraph';
 import { AgentStateAnnotation } from './state.js';
 import { makeRetriever } from '../shared/retrieval.js';
 import { formatDocs } from './utils.js';
-import { HumanMessage } from '@langchain/core/messages';
+import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { RESPONSE_SYSTEM_PROMPT } from './prompts.js';
 import { RunnableConfig } from '@langchain/core/runnables';
 import {
@@ -44,9 +44,15 @@ async function answerQueryDirectly(
 ): Promise<typeof AgentStateAnnotation.Update> {
   const configuration = ensureAgentConfiguration(config);
   const model = await loadChatModel(configuration.queryModel);
-  const userHumanMessage = new HumanMessage(state.query);
+  const userHumanMessage = new HumanMessage(state.query || 'Hello');
 
-  const response = await model.invoke([userHumanMessage]);
+  const systemMessage = new SystemMessage(
+    `You are Manu — an intelligent, friendly AI Document Knowledge Assistant.
+Always respond in English (or Hindi/Hinglish if the user asks in Hindi).
+Introduce yourself warmly and let the user know you are ready to answer questions from their uploaded technical manuals, drone guides, IT role profiles, Scrum guidelines, and documentation.`
+  );
+
+  const response = await model.invoke([systemMessage, userHumanMessage]);
   return { messages: [userHumanMessage, response] };
 }
 
@@ -91,12 +97,10 @@ async function generateResponse(
     context: context,
   });
 
+  const promptMessages = formattedPrompt.toChatMessages();
+  const response = await model.invoke(promptMessages);
+
   const userHumanMessage = new HumanMessage(state.query);
-  const formattedPromptMessage = new HumanMessage(formattedPrompt.toString());
-
-  const messageHistory = [...state.messages, formattedPromptMessage];
-  const response = await model.invoke(messageHistory);
-
   return { messages: [userHumanMessage, response] };
 }
 

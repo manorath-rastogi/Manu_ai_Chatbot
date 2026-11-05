@@ -7,27 +7,27 @@ interface ExamplePromptsProps {
 
 const EXAMPLE_PROMPTS = [
   {
-    title: 'Summarize Key Insights',
-    description: 'Extract core takeaways and main findings from uploaded documents',
-    prompt: 'Can you provide a comprehensive summary of key insights from the document?',
+    title: 'DJI Drone Compass Calibration',
+    description: 'Steps to calibrate compass on DJI Mavic 3',
+    prompt: 'How do I calibrate the compass on a DJI Mavic drone?',
     icon: Sparkles,
   },
   {
-    title: 'Executive Overview',
-    description: 'Generate a high-level briefing tailored for stakeholders',
-    prompt: 'Please provide an executive summary highlighting the main points.',
+    title: '.NET Developer Role',
+    description: 'Core skills and responsibilities in IT',
+    prompt: 'What are the main responsibilities of a .NET Software Developer?',
     icon: FileText,
   },
   {
-    title: 'Action Items & Next Steps',
-    description: 'Highlight key recommendations and actionable decisions',
-    prompt: 'What are the main action items and next steps outlined here?',
+    title: 'Scrum Product Owner Rules',
+    description: 'Accountabilities defined in Scrum Guide 2020',
+    prompt: 'What are the accountabilities of a Product Owner according to the Scrum Guide?',
     icon: ListChecks,
   },
   {
-    title: 'Deep Analytical Q&A',
-    description: 'Ask deep factual questions backed by verified document sources',
-    prompt: 'Explain the core methodology and evidence supporting the document conclusions.',
+    title: 'CCNA 200-301 Exam Domains',
+    description: 'Key network topics and scoring weight',
+    prompt: 'What are the major domains covered in the CCNA 200-301 exam?',
     icon: HelpCircle,
   },
 ];

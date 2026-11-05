@@ -49,7 +49,13 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       try {
         const payload = JSON.parse(body || '{}');
-        const query = payload?.input?.query || payload?.input?.message || '';
+        const query =
+          payload?.input?.query ||
+          payload?.input?.message ||
+          (Array.isArray(payload?.input?.messages)
+            ? payload.input.messages[payload.input.messages.length - 1]?.content
+            : '') ||
+          '';
 
         console.log(`[Stream Run] Query: "${query}"`);
 
