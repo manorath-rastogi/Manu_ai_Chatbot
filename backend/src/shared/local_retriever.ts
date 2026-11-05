@@ -52,6 +52,36 @@ export function getDocumentIndex(): PageChunk[] {
   return [];
 }
 
+const STOP_WORDS = new Set([
+  'how',
+  'what',
+  'when',
+  'where',
+  'which',
+  'who',
+  'whom',
+  'why',
+  'the',
+  'and',
+  'for',
+  'with',
+  'from',
+  'this',
+  'that',
+  'have',
+  'has',
+  'are',
+  'was',
+  'were',
+  'can',
+  'you',
+  'your',
+  'about',
+  'into',
+  'over',
+  'after',
+]);
+
 export class LocalDocumentRetriever extends BaseRetriever {
   lc_namespace = ['manu', 'retrievers'];
   k: number;
@@ -59,7 +89,7 @@ export class LocalDocumentRetriever extends BaseRetriever {
 
   constructor(fields?: { k?: number; filterKwargs?: Record<string, any> }) {
     super();
-    this.k = fields?.k || 4;
+    this.k = fields?.k || 6;
     this.filterKwargs = fields?.filterKwargs || {};
   }
 
@@ -105,10 +135,15 @@ export class LocalDocumentRetriever extends BaseRetriever {
 
     const queryTerms = query
       .toLowerCase()
+      .replace(/[^a-z0-9 ]/g, ' ')
       .split(/\s+/)
-      .filter((w) => w.length > 2);
+      .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
 
-    const scored: Array<PageChunk & { score: number }> = [];
+    if (queryTerms.length === 0) {
+      return [];
+    }
+
+    const scored: Array<PageChunk & { score: number; termMatches: number }> = [];
 
     for (let i = 0; i < index.length; i++) {
       const item = index[i];
@@ -125,24 +160,46 @@ export class LocalDocumentRetriever extends BaseRetriever {
       const sourceLower = item.source.toLowerCase();
 
       let score = 0;
+      let termMatches = 0;
+
       for (const t of queryTerms) {
-        // High boost if filename matches query keyword
+        let matched = false;
         if (sourceLower.includes(t)) {
-          score += 25;
+          score += 20;
+          matched = true;
         }
         if (textLower.includes(t)) {
           const count = textLower.split(t).length - 1;
-          score += Math.min(count, 10);
+          score += Math.min(count, 5) * 3;
+          matched = true;
         }
+        if (matched) termMatches++;
       }
 
+      // High boost when multiple distinct query terms co-occur on the same page
+      score += Math.pow(termMatches, 2) * 5;
+
       if (score > 0) {
-        scored.push({ ...item, score });
+        scored.push({ ...item, score, termMatches });
       }
     }
 
     scored.sort((a, b) => b.score - a.score);
-    const topResults = scored.slice(0, this.k);
+
+    // Limit at most 2 pages per document to prevent any single large PDF from crowding out others
+    const docPageCount: Record<string, number> = {};
+    const topResults: Array<PageChunk & { score: number }> = [];
+
+    for (const item of scored) {
+      const cleanSource = item.source.replace(/\s*\(\d+\)/g, '');
+      docPageCount[cleanSource] = (docPageCount[cleanSource] || 0) + 1;
+      if (docPageCount[cleanSource] <= 2) {
+        topResults.push(item);
+        if (topResults.length >= this.k) {
+          break;
+        }
+      }
+    }
 
     return topResults.map(
       (item) =>

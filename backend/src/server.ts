@@ -71,17 +71,6 @@ const server = http.createServer(async (req, res) => {
           messages: [],
         });
 
-        // 1. Send retrieved documents event (proper SSE event format)
-        if (result.documents && result.documents.length > 0) {
-          res.write(
-            `event: updates\ndata: ${JSON.stringify({
-              retrieveDocuments: {
-                documents: result.documents,
-              },
-            })}\n\n`,
-          );
-        }
-
         // 2. Stream answer text in chunks to provide streaming effect
         const fullAnswer =
           result.messages[result.messages.length - 1]?.content ||
