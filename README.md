@@ -1,6 +1,6 @@
 # Manu AI Chatbot 🤖
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![LangChain](https://img.shields.io/badge/LangChain-v0.3-emerald.svg)](https://js.langchain.com/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Agentic_Workflows-purple.svg)](https://langchain-ai.github.io/langgraphjs/)
@@ -330,7 +330,13 @@ npx @langchain/langgraph-cli deploy
 
 ---
 
-## 📄 License
+## 📄 License & Attribution
 
-This project is open-source software licensed under the [MIT License](LICENSE).  
-Copyright © 2026 Manorath Rastogi (Manu). All rights reserved.
+This project is open-source software licensed under the **[GNU General Public License v3.0 (GPL-3.0)](LICENSE)**.  
+Copyright © 2026 **Manorath Rastogi (Manu)**.
+
+### License Terms at a Glance:
+- **Commercial & Personal Use**: You are free to use this project for personal, academic, or commercial/business purposes.
+- **Freedom to Modify**: You can modify, fork, and build upon any part of the codebase.
+- **Mandatory Attribution (Credit Compulsory)**: You **MUST** retain all copyright notices and give prominent credit to **Manorath Rastogi (Manu)** with a link to the original repository in any distribution or derivative work.
+- **Mandatory Open Source (Copyleft / Share-Alike)**: Any modified versions or derivative works that you distribute **MUST** remain fully open source under the same GNU GPL-3.0 license. Closed-source proprietary forks are prohibited.
